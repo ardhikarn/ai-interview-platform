@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { assessmentsApi } from "@/services/assessments";
 import { LEVEL_LABELS } from "@/utils/constants";
+import { getCandidateDecisionStatus, shouldRefreshCandidateSessions } from "@/utils/hiringDecision";
 import { ArrowLeft, Copy, Check, Eye, Pencil, Clock, Plus, UserRound } from "lucide-react";
 import type { Assessment, Session } from "@/types";
 
@@ -35,7 +36,9 @@ function SessionRow({
   const isLive = session.status === "active";
   const isEnded = session.status === "ended";
   const isPending = session.status === "pending";
+  const isFailed = session.status === "failed" || (isEnded && session.end_reason === "error");
   const displayName = session.candidate_name || `Candidate ${index}`;
+  const decisionMeta = getCandidateDecisionStatus(session);
 
   return (
     <div className="flex items-center justify-between py-3 px-4">
@@ -66,16 +69,16 @@ function SessionRow({
             Live
           </span>
         )}
-        {isEnded && session.end_reason === "error" && (
+        {isFailed && (
           <span className="flex items-center gap-1 text-xs text-destructive">
             <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
             Failed
           </span>
         )}
-        {isEnded && session.end_reason !== "error" && (
-          <span className="flex items-center gap-1 text-xs text-green-600">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-            Completed
+        {decisionMeta && (
+          <span className={`flex items-center gap-1 text-xs ${decisionMeta.className}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${decisionMeta.dotClassName}`} />
+            {decisionMeta.label}
           </span>
         )}
 
@@ -104,14 +107,14 @@ function SessionRow({
               <Eye className="h-3 w-3 mr-1" /> Monitor
             </Button>
           )}
-          {isEnded && session.end_reason !== "error" && (
+        {isEnded && !isFailed && (
             <Button
               variant="outline"
               size="sm"
               className="h-7 px-2 text-xs"
               onClick={() => navigate(`/assessments/${assessmentId}/sessions/${session.id}/portfolio`)}
             >
-              Results
+              {session.hiring_decision ? "View decision" : "Review"}
             </Button>
           )}
         </div>
@@ -148,10 +151,10 @@ export default function AssessmentInvitePage() {
     }).catch(() => {}).finally(() => setLoading(false));
   }, [id]);
 
-  // Poll while any session is live or pending
+  // Poll while an interview or its report is still progressing.
   useEffect(() => {
-    const hasActive = sessions.some((s) => s.status !== "ended");
-    if (!hasActive) return;
+    const needsRefresh = shouldRefreshCandidateSessions(sessions);
+    if (!needsRefresh) return;
     const interval = setInterval(loadSessions, 5000);
     return () => clearInterval(interval);
   }, [sessions, loadSessions]);

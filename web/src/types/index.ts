@@ -39,13 +39,20 @@ export interface Session {
   candidate_name?: string;
   invite_token: string;
   invite_url: string;
-  status: "pending" | "active" | "ended";
+  status: "pending" | "active" | "ended" | "failed";
   end_reason?: string;
   started_at?: string;
   ended_at?: string;
   duration_seconds?: number;
+  portfolio_status?: "pending" | "generating" | "complete" | "failed" | null;
+  hiring_decision?: HiringDecision | null;
+  decision_notes?: string | null;
+  decided_by?: number | null;
+  decided_at?: string | null;
   created_at?: string;
 }
+
+export type HiringDecision = "advance" | "hold" | "reject";
 
 export interface CoverageSkill {
   id: number;
