@@ -148,8 +148,9 @@ export interface FitGapReport {
   portfolio_id: number;
   vacancy_id: number;
   skill_comparisons: SkillComparison[];
-  culture_narrative: string;
-  overall_narrative: string;
+  culture_narrative: string | null;
+  overall_narrative: string | null;
+  narrative_source: "ai" | "rule_based_fallback";
   generated_at: string;
 }
 

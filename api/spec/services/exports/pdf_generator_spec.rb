@@ -32,6 +32,10 @@ RSpec.describe Exports::PdfGenerator, type: :service do
   let!(:portfolio) do
     Portfolio.create!(session: session, generation_status: 'complete')
   end
+  let!(:vacancy) do
+    Vacancy.create!(tenant_id: organization.id, created_by: 42, role_title: 'Product Engineer')
+  end
+
   before do
     Current.organization = organization
     Current.tenant_id = organization.id
@@ -44,10 +48,25 @@ RSpec.describe Exports::PdfGenerator, type: :service do
       competency_summary: 'Menjelaskan trade-off dengan jelas – tanpa menghilangkan konteks.',
       evidence: ['“Saya memilih opsi ini karena dampaknya lebih kecil.”']
     )
+    FitGapReport.create!(
+      portfolio: portfolio,
+      vacancy: vacancy,
+      skill_comparisons: [
+        {
+          skill_label: 'Komunikasi & Kolaborasi',
+          expected_level: 3,
+          candidate_level: 3,
+          result: 'match',
+          delta: 0
+        }
+      ],
+      overall_narrative: 'Ringkasan berbasis aturan – narasi AI sedang tidak tersedia.',
+      narrative_source: 'rule_based_fallback'
+    )
   end
 
-  it 'menghasilkan PDF valid untuk teks Unicode' do
-    pdf = described_class.new(portfolio: portfolio).call
+  it 'menghasilkan PDF valid untuk teks Unicode dan fallback narrative' do
+    pdf = described_class.new(portfolio: portfolio, vacancy: vacancy).call
 
     expect(pdf).to start_with('%PDF')
     expect(pdf.bytesize).to be > 1_000

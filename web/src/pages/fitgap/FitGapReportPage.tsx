@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import ComparisonTable from "@/components/fitgap/ComparisonTable";
+import NarrativeCards from "@/components/fitgap/NarrativeCards";
 import { portfoliosApi } from "@/services/portfolios";
 import { sessionsApi } from "@/services/sessions";
 import { usePolling } from "@/hooks/usePolling";
@@ -217,16 +218,11 @@ export default function FitGapReportPage() {
 
           <Separator />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Culture &amp; Competency Fit</CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
-                {report.culture_narrative || report.overall_narrative}
-              </p>
-            </CardContent>
-          </Card>
+          <NarrativeCards
+            culture_narrative={report.culture_narrative}
+            overall_narrative={report.overall_narrative}
+            narrative_source={report.narrative_source}
+          />
 
           {/* Discovered skills */}
           {portfolio && portfolio.skills.some((s) => s.is_discovered) && (

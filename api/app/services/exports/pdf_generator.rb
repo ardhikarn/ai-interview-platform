@@ -157,6 +157,7 @@ module Exports
       if @fit_gap.culture_narrative.present?
         pdf.move_down 12
         pdf.font_size(12) { pdf.text "Culture & Competency Fit", style: :bold }
+        pdf.font_size(8) { pdf.text narrative_source_label, color: '666666' }
         pdf.move_down 4
         pdf.font_size(10) { pdf.text @fit_gap.culture_narrative }
       end
@@ -164,9 +165,14 @@ module Exports
       if @fit_gap.overall_narrative.present?
         pdf.move_down 8
         pdf.font_size(12) { pdf.text "Overall Assessment", style: :bold }
+        pdf.font_size(8) { pdf.text narrative_source_label, color: '666666' }
         pdf.move_down 4
         pdf.font_size(10) { pdf.text @fit_gap.overall_narrative }
       end
+    end
+
+    def narrative_source_label
+      @fit_gap.narrative_source == 'ai' ? 'AI-generated' : 'Rule-based fallback (AI narrative unavailable)'
     end
 
     def render_footer(pdf)
