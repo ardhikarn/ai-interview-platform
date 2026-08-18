@@ -116,7 +116,7 @@ module Api
       # Records the assessor's decision. AI output supports this decision but
       # never sets it automatically.
       def update_decision
-        unless @session.ended? || @session.portfolio&.complete?
+        unless @session.ended? && @session.portfolio&.complete?
           return json_error("A decision can only be recorded after the interview report is ready", :unprocessable_entity)
         end
 
