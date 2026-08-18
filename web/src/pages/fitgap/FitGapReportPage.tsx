@@ -154,7 +154,7 @@ export default function FitGapReportPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Link
@@ -163,24 +163,24 @@ export default function FitGapReportPage() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
-            <h1 className="text-lg font-semibold">Fit/Gap Report</h1>
+            <h1 className="whitespace-nowrap text-lg font-semibold">Fit/Gap Report</h1>
           </div>
         </div>
 
         {portfolio && (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleRegenerate} disabled={regenerating || generating}>
-              {regenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1" />}
+          <div className="grid w-full grid-flow-col auto-cols-fr gap-2 sm:flex sm:w-auto">
+            <Button className="w-full px-2 sm:w-auto sm:px-3" variant="outline" size="sm" onClick={handleRegenerate} disabled={regenerating || generating}>
+              {regenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1 h-3.5 w-3.5 shrink-0" />}
               Regenerate
             </Button>
             {report && (
               <>
-                <Button variant="outline" size="sm" onClick={() => handleExport("pdf")} disabled={!!exporting}>
-                  {exporting === "pdf" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1" />}
+                <Button className="w-full px-2 sm:w-auto sm:px-3" variant="outline" size="sm" onClick={() => handleExport("pdf")} disabled={!!exporting}>
+                  {exporting === "pdf" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1 h-3.5 w-3.5 shrink-0" />}
                   PDF
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => handleExport("json")} disabled={!!exporting}>
-                  {exporting === "json" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1" />}
+                <Button className="w-full px-2 sm:w-auto sm:px-3" variant="outline" size="sm" onClick={() => handleExport("json")} disabled={!!exporting}>
+                  {exporting === "json" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1 h-3.5 w-3.5 shrink-0" />}
                   JSON
                 </Button>
               </>
