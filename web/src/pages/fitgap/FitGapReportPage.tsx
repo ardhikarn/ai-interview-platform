@@ -1,3 +1,5 @@
+import { useBreadcrumbLabel } from "@/components/layout/Breadcrumbs";
+import { ErrorState, EmptyState } from "@/components/ui/page";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,15 +11,32 @@ import { Textarea } from "@/components/ui/textarea";
 import ComparisonTable from "@/components/fitgap/ComparisonTable";
 import NarrativeCards from "@/components/fitgap/NarrativeCards";
 import { portfoliosApi } from "@/services/portfolios";
+import { vacanciesApi } from "@/services/vacancies";
 import { sessionsApi } from "@/services/sessions";
 import { usePolling } from "@/hooks/usePolling";
 import { ArrowLeft, Download, Loader2, RefreshCw, Zap } from "lucide-react";
 import type { FitGapReport, HiringDecision, Portfolio } from "@/types";
 
-const DECISION_OPTIONS: Array<{ value: HiringDecision; label: string; description: string }> = [
-  { value: "advance", label: "Advance", description: "Move the candidate to the next stage" },
-  { value: "hold", label: "Hold", description: "Keep under consideration pending more evidence" },
-  { value: "reject", label: "Reject", description: "Do not proceed with this application" },
+const DECISION_OPTIONS: Array<{
+  value: HiringDecision;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "advance",
+    label: "Advance",
+    description: "Move the candidate to the next stage",
+  },
+  {
+    value: "hold",
+    label: "Hold",
+    description: "Keep under consideration pending more evidence",
+  },
+  {
+    value: "reject",
+    label: "Reject",
+    description: "Do not proceed with this application",
+  },
 ];
 
 export default function FitGapReportPage() {
@@ -27,6 +46,13 @@ export default function FitGapReportPage() {
     vacancyId: string;
   }>();
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [decisionSaved, setDecisionSaved] = useState(false);
+  const [candidateName, setCandidateName] = useState("");
+  const [assessmentName, setAssessmentName] = useState("");
+  useBreadcrumbLabel(`assessments:${id}`, assessmentName);
+  useBreadcrumbLabel(`sessions:${sessionId}`, candidateName);
+  const [vacancyTitle, setVacancyTitle] = useState("");
   const [report, setReport] = useState<FitGapReport | null>(null);
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -43,20 +69,41 @@ export default function FitGapReportPage() {
   const fetchReport = useCallback(async () => {
     if (!portfolio) return;
     try {
-      const res = await portfoliosApi.getFitGap(portfolio.id, Number(vacancyId));
+      const res = await portfoliosApi.getFitGap(
+        portfolio.id,
+        Number(vacancyId),
+      );
       setReport(res.data.report);
+      setLoadError(null);
       setGenerating(false);
     } catch (e: any) {
       if (e?.response?.status === 404) {
         try {
           await portfoliosApi.triggerFitGap(portfolio.id, Number(vacancyId));
           setGenerating(true);
+          setLoadError(null);
         } catch {
+          setLoadError("Could not start report generation. Please try again.");
           setGenerating(false);
         }
+      } else {
+        setLoadError("Could not load the fit/gap report. Please try again.");
       }
     }
   }, [portfolio, vacancyId]);
+
+  useEffect(() => {
+    let active = true;
+    vacanciesApi
+      .get(Number(vacancyId))
+      .then((res) => {
+        if (active) setVacancyTitle(res.data.vacancy.role_title);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [vacancyId]);
 
   useEffect(() => {
     Promise.all([
@@ -68,11 +115,18 @@ export default function FitGapReportPage() {
         if (data.portfolio) {
           setPortfolio(data.portfolio);
         }
+        setAssessmentName(sessionRes.data.assessment?.name ?? "");
         const session = sessionRes.data.session;
+        setCandidateName(session.candidate_name || "Candidate " + session.id);
         setDecision(session.hiring_decision ?? null);
         setDecisionNotes(session.decision_notes ?? "");
         setDecidedAt(session.decided_at ?? null);
       })
+      .catch(() =>
+        setLoadError(
+          "Could not load the candidate evaluation. Please try again.",
+        ),
+      )
       .finally(() => setLoading(false));
   }, [sessionId]);
 
@@ -89,6 +143,8 @@ export default function FitGapReportPage() {
       await portfoliosApi.regenerateFitGap(portfolio.id, Number(vacancyId));
       setReport(null);
       setGenerating(true);
+    } catch {
+      setLoadError("Could not regenerate the report. Please try again.");
     } finally {
       setRegenerating(false);
     }
@@ -99,11 +155,18 @@ export default function FitGapReportPage() {
     setExporting(format);
     setExportError(null);
     try {
-      const res = await portfoliosApi.exportPortfolio(portfolio.id, format, Number(vacancyId));
+      const res = await portfoliosApi.exportPortfolio(
+        portfolio.id,
+        format,
+        Number(vacancyId),
+      );
       const ext = format;
-      const blob = format === "pdf"
-        ? new Blob([res.data as BlobPart], { type: "application/pdf" })
-        : new Blob([JSON.stringify(res.data, null, 2)], { type: "application/json" });
+      const blob =
+        format === "pdf"
+          ? new Blob([res.data as BlobPart], { type: "application/pdf" })
+          : new Blob([JSON.stringify(res.data, null, 2)], {
+              type: "application/json",
+            });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -111,7 +174,9 @@ export default function FitGapReportPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      setExportError(`Failed to export ${format.toUpperCase()}. Please try again.`);
+      setExportError(
+        `Failed to export ${format.toUpperCase()}. Please try again.`,
+      );
     } finally {
       setExporting(null);
     }
@@ -125,6 +190,7 @@ export default function FitGapReportPage() {
 
     setSavingDecision(true);
     setDecisionError(null);
+    setDecisionSaved(false);
     try {
       const res = await sessionsApi.updateDecision(
         Number(sessionId),
@@ -133,9 +199,11 @@ export default function FitGapReportPage() {
       );
       setDecisionNotes(res.data.session.decision_notes ?? decisionNotes.trim());
       setDecidedAt(res.data.session.decided_at ?? null);
+      setDecisionSaved(true);
     } catch (e: any) {
       setDecisionError(
-        e?.response?.data?.errors?.[0]?.message ?? "Failed to save the hiring decision.",
+        e?.response?.data?.errors?.[0]?.message ??
+          "Failed to save the hiring decision.",
       );
     } finally {
       setSavingDecision(false);
@@ -144,7 +212,7 @@ export default function FitGapReportPage() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto space-y-4">
+      <div className="max-w-5xl mx-auto space-y-4">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-48 w-full" />
       </div>
@@ -152,35 +220,72 @@ export default function FitGapReportPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="detail-page">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-3 border-b pb-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Link
               to={`/assessments/${id}/sessions/${sessionId}/portfolio`}
+              aria-label="Back to previous page"
               className="text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
-            <h1 className="whitespace-nowrap text-lg font-semibold">Fit/Gap Report</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Fit/Gap Report
+            </h1>
           </div>
+          <p className="pl-6 text-sm text-muted-foreground">
+            {candidateName}
+            {vacancyTitle && " · " + vacancyTitle}
+          </p>
         </div>
 
         {portfolio && (
           <div className="grid w-full grid-flow-col auto-cols-fr gap-2 sm:flex sm:w-auto">
-            <Button className="w-full px-2 sm:w-auto sm:px-3" variant="outline" size="sm" onClick={handleRegenerate} disabled={regenerating || generating}>
-              {regenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1 h-3.5 w-3.5 shrink-0" />}
+            <Button
+              className="w-full px-2 sm:w-auto sm:px-3"
+              variant="outline"
+              size="sm"
+              onClick={handleRegenerate}
+              disabled={regenerating || generating}
+            >
+              {regenerating ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-1 h-3.5 w-3.5 shrink-0" />
+              )}
               Regenerate
             </Button>
             {report && (
               <>
-                <Button className="w-full px-2 sm:w-auto sm:px-3" variant="outline" size="sm" onClick={() => handleExport("pdf")} disabled={!!exporting}>
-                  {exporting === "pdf" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1 h-3.5 w-3.5 shrink-0" />}
+                <Button
+                  className="w-full px-2 sm:w-auto sm:px-3"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleExport("pdf")}
+                  disabled={!!exporting}
+                >
+                  {exporting === "pdf" ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Download className="mr-1 h-3.5 w-3.5 shrink-0" />
+                  )}
                   PDF
                 </Button>
-                <Button className="w-full px-2 sm:w-auto sm:px-3" variant="outline" size="sm" onClick={() => handleExport("json")} disabled={!!exporting}>
-                  {exporting === "json" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1 h-3.5 w-3.5 shrink-0" />}
+                <Button
+                  className="w-full px-2 sm:w-auto sm:px-3"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleExport("json")}
+                  disabled={!!exporting}
+                >
+                  {exporting === "json" ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Download className="mr-1 h-3.5 w-3.5 shrink-0" />
+                  )}
                   JSON
                 </Button>
               </>
@@ -189,8 +294,36 @@ export default function FitGapReportPage() {
         )}
       </div>
 
+      {loadError && (
+        <ErrorState
+          message={loadError}
+          onRetry={() =>
+            portfolio ? void fetchReport() : window.location.reload()
+          }
+        />
+      )}
+      {!loadError && !portfolio && (
+        <EmptyState
+          title="Evaluation not available yet"
+          description="Wait for the candidate portfolio to finish, then open this report again."
+          action={
+            <Button asChild variant="outline">
+              <Link
+                to={
+                  "/assessments/" + id + "/sessions/" + sessionId + "/portfolio"
+                }
+              >
+                View portfolio
+              </Link>
+            </Button>
+          }
+        />
+      )}
       {exportError && (
-        <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <div
+          role="alert"
+          className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+        >
           {exportError}
         </div>
       )}
@@ -199,7 +332,9 @@ export default function FitGapReportPage() {
       {generating && (
         <div className="border rounded-lg p-12 text-center space-y-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Generating fit/gap report...</p>
+          <p className="text-sm text-muted-foreground">
+            Generating fit/gap report...
+          </p>
         </div>
       )}
 
@@ -239,12 +374,21 @@ export default function FitGapReportPage() {
                   {portfolio.skills
                     .filter((s) => s.is_discovered)
                     .map((s) => (
-                      <div key={s.id} className="text-sm flex items-center gap-2">
+                      <div
+                        key={s.id}
+                        className="text-sm flex items-center gap-2"
+                      >
                         <span className="font-medium">{s.skill_label}</span>
                         <span className="text-muted-foreground">
-                          {s.ai_level} ({s.ai_confidence?.toLowerCase() === "low" ? "low confidence" : "confirmed"})
+                          {s.ai_level} (
+                          {s.ai_confidence?.toLowerCase() === "low"
+                            ? "low confidence"
+                            : "confirmed"}
+                          )
                         </span>
-                        <span className="text-xs text-muted-foreground">— Not required for this role, may be additive.</span>
+                        <span className="text-xs text-muted-foreground">
+                          — Not required for this role, may be additive.
+                        </span>
                       </div>
                     ))}
                 </CardContent>
@@ -259,7 +403,8 @@ export default function FitGapReportPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Hiring Decision</CardTitle>
               <p className="text-xs text-muted-foreground">
-                AI output is supporting evidence. The final decision is yours and requires a rationale.
+                AI output is supporting evidence. The final decision is yours
+                and requires a rationale.
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -270,10 +415,20 @@ export default function FitGapReportPage() {
                     type="button"
                     variant={decision === option.value ? "default" : "outline"}
                     className="h-auto min-h-16 flex-col items-start whitespace-normal px-3 py-2 text-left"
-                    onClick={() => setDecision(option.value)}
+                    aria-pressed={decision === option.value}
+                    onClick={() => {
+                      setDecision(option.value);
+                      setDecisionSaved(false);
+                    }}
                   >
                     <span className="font-medium">{option.label}</span>
-                    <span className={decision === option.value ? "text-xs text-primary-foreground/80" : "text-xs text-muted-foreground"}>
+                    <span
+                      className={
+                        decision === option.value
+                          ? "text-xs text-primary-foreground/80"
+                          : "text-xs text-muted-foreground"
+                      }
+                    >
                       {option.description}
                     </span>
                   </Button>
@@ -285,14 +440,24 @@ export default function FitGapReportPage() {
                 <Textarea
                   id="decision-rationale"
                   value={decisionNotes}
-                  onChange={(event) => setDecisionNotes(event.target.value)}
+                  onChange={(event) => {
+                    setDecisionNotes(event.target.value);
+                    setDecisionSaved(false);
+                  }}
                   placeholder="Summarize the evidence and trade-offs behind this decision..."
                   rows={4}
                 />
               </div>
 
+              {decisionSaved && (
+                <p role="status" className="text-sm text-success">
+                  Hiring decision saved.
+                </p>
+              )}
               {decisionError && (
-                <p role="alert" className="text-sm text-destructive">{decisionError}</p>
+                <p role="alert" className="text-sm text-destructive">
+                  {decisionError}
+                </p>
               )}
 
               <div className="flex items-center justify-between gap-3">
@@ -301,8 +466,13 @@ export default function FitGapReportPage() {
                     ? `Last saved ${new Date(decidedAt).toLocaleString()}`
                     : "No hiring decision has been recorded yet."}
                 </p>
-                <Button onClick={handleSaveDecision} disabled={savingDecision || !decision}>
-                  {savingDecision && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+                <Button
+                  onClick={handleSaveDecision}
+                  disabled={savingDecision || !decision}
+                >
+                  {savingDecision && (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  )}
                   {decidedAt ? "Update Decision" : "Save Decision"}
                 </Button>
               </div>

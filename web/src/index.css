@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Reserve the document gutter when Radix locks background scrolling. */
+@supports (scrollbar-gutter: stable) {
+    html { scrollbar-gutter: stable; }
+    body[data-scroll-locked] { margin-right: 0 !important; }
+}
+
+/* Radix hides native viewport scrollbars; long lists need a visible affordance. */
+.select-viewport[data-radix-select-viewport] {
+    scrollbar-width: thin !important;
+    scrollbar-color: hsl(var(--input)) transparent;
+    overscroll-behavior: contain;
+}
+.select-viewport[data-radix-select-viewport]::-webkit-scrollbar {
+    display: block !important;
+    width: 6px;
+}
+.select-viewport[data-radix-select-viewport]::-webkit-scrollbar-thumb {
+    background: hsl(var(--input));
+    border-radius: 6px;
+}
+
 @layer base {
     :root {
         --background: 0 0% 100%;
@@ -14,27 +35,34 @@
         --popover-foreground: 222 47% 11%;
 
         /* Rakamin teal: #01959f → hsl(184, 99%, 31%) */
-        --primary: 184 99% 31%;
+        --primary: 184 85% 25%;
         --primary-foreground: 0 0% 98%;
 
         /* Rakamin yellow: #FBC037 → hsl(43, 96%, 60%) */
-        --secondary: 43 96% 60%;
-        --secondary-foreground: 26 47% 25%;
+        --secondary: 210 12% 95%;
+        --secondary-foreground: 220 14% 25%;
 
-        --muted: 210 40% 96%;
-        --muted-foreground: 215 16% 47%;
+        --muted: 220 14% 96%;
+        --muted-foreground: 220 9% 43%;
 
         --accent: 210 40% 96%;
         --accent-foreground: 222 47% 11%;
 
-        --destructive: 0 84% 60%;
+        --destructive: 0 68% 43%;
         --destructive-foreground: 0 0% 98%;
 
-        --border: 214 32% 91%;
-        --input: 214 32% 91%;
+        --border: 220 13% 89%;
+        --input: 220 13% 83%;
         --ring: 184 99% 31%;
 
         --radius: 0.5rem;
+        --primary-hover: 184 85% 21%;
+        --primary-active: 184 85% 18%;
+        --success: 152 65% 28%;
+        --warning: 34 90% 30%;
+        --info: 216 72% 39%;
+        --surface: 0 0% 100%;
+        --surface-secondary: 220 14% 98%;
     }
 
     .dark {
@@ -50,8 +78,8 @@
         --primary: 184 99% 31%;
         --primary-foreground: 0 0% 98%;
 
-        --secondary: 43 96% 60%;
-        --secondary-foreground: 26 47% 25%;
+        --secondary: 210 12% 95%;
+        --secondary-foreground: 220 14% 25%;
 
         --muted: 217 33% 17%;
         --muted-foreground: 215 20% 65%;
@@ -74,6 +102,25 @@
     }
 
     body {
-        @apply bg-background text-foreground;
+        @apply bg-background text-foreground antialiased;
+        font-size: 14px;
+        line-height: 1.5;
     }
+}
+@layer base {
+    :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
+    input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: hsl(var(--destructive)); }
+    ::selection { background: hsl(var(--primary) / 0.15); }
+}
+@layer components {
+    .data-table { @apply w-full text-left text-sm; }
+    .data-table thead { @apply border-b bg-muted/50 text-xs text-muted-foreground; }
+    .data-table th { @apply px-4 py-3 font-medium; }
+    .data-table td { @apply px-4 py-3; }
+    .data-table tbody tr { @apply border-b transition-colors last:border-0 hover:bg-muted/40 focus-within:bg-muted/40; }
+    .form-page { @apply mx-auto max-w-3xl space-y-6; }
+    .detail-page { @apply mx-auto max-w-5xl space-y-6; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

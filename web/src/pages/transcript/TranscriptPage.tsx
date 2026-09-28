@@ -1,3 +1,5 @@
+import { useBreadcrumbLabel } from "@/components/layout/Breadcrumbs";
+import { ErrorState } from "@/components/ui/page";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,6 +12,9 @@ export default function TranscriptPage() {
   const { id, sessionId } = useParams<{ id: string; sessionId: string }>();
   const [turns, setTurns] = useState<TranscriptTurn[]>([]);
   const [candidateName, setCandidateName] = useState<string | null>(null);
+  const [assessmentName, setAssessmentName] = useState("");
+  useBreadcrumbLabel(`assessments:${id}`, assessmentName);
+  useBreadcrumbLabel(`sessions:${sessionId}`, candidateName);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -21,6 +26,7 @@ export default function TranscriptPage() {
       .then(([tRes, sRes]) => {
         setTurns(tRes.data.turns);
         setCandidateName(sRes.data.session.candidate_name ?? null);
+        setAssessmentName(sRes.data.assessment?.name ?? "");
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
@@ -41,17 +47,17 @@ export default function TranscriptPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="detail-page">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <Link
             to={`/assessments/${id}/sessions/${sessionId}/portfolio`}
-            className="text-muted-foreground hover:text-foreground"
+            aria-label="Back to previous page" className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
-            <h1 className="text-lg font-semibold">Interview Transcript</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Interview Transcript</h1>
             {candidateName && (
               <p className="text-sm text-muted-foreground">{candidateName}</p>
             )}
@@ -74,9 +80,7 @@ export default function TranscriptPage() {
       )}
 
       {!loading && error && (
-        <div className="border rounded-lg p-6 text-center text-sm text-destructive">
-          Failed to load transcript. Please refresh.
-        </div>
+        <ErrorState message="Could not load the transcript." onRetry={() => window.location.reload()} />
       )}
 
       {!loading && !error && turns.length === 0 && (
@@ -86,16 +90,16 @@ export default function TranscriptPage() {
       )}
 
       {!loading && !error && turns.length > 0 && (
-        <div className="space-y-3">
+        <div className="divide-y rounded-lg border">
           {turns.map((turn) => {
             const isAI = turn.speaker === "ai";
             return (
               <div
                 key={turn.id}
-                className={`rounded-lg p-4 ${
+                className={`p-5 ${
                   isAI
-                    ? "bg-muted border"
-                    : "bg-background border border-primary/20"
+                    ? "bg-muted/40"
+                    : "bg-background"
                 }`}
               >
                 <p
@@ -105,7 +109,7 @@ export default function TranscriptPage() {
                 >
                   {isAI ? "AI Interviewer" : "Candidate"}
                 </p>
-                <p className="text-sm whitespace-pre-wrap">{turn.text}</p>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{turn.text}</p>
               </div>
             );
           })}

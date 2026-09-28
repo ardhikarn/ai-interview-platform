@@ -23,11 +23,11 @@ export default function SkillPortfolioCard({
     <Card>
       <CardContent className="p-4 space-y-4">
         {/* Skill header */}
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             <LevelBadge level={effectiveLevel} />
             <div className="space-y-0.5">
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <span className="font-semibold">{skill.skill_label}</span>
                 {skill.is_discovered && (
                   <span className="flex items-center gap-0.5 text-xs text-amber-600">
@@ -56,7 +56,7 @@ export default function SkillPortfolioCard({
             </span>
             <ul className="space-y-1">
               {skill.evidence.map((quote, i) => (
-                <li key={i} className="text-sm text-foreground">
+                <li key={i} className="border-l-2 pl-3 text-sm leading-relaxed text-foreground">
                   • "{quote}"
                 </li>
               ))}
@@ -64,7 +64,7 @@ export default function SkillPortfolioCard({
           </div>
         )}
 
-        {/* Competency summary */}
+        {/* AI-generated competency summary */}
         {skill.competency_summary && (
           <div className="space-y-1">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
