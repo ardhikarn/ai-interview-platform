@@ -55,6 +55,21 @@ beforeEach(() => {
   } as any);
 });
 describe("Candidate workspace", () => {
+  it("keeps Copied stable during repeated clipboard writes and ignores overlapping clicks", async () => {
+    let resolveCopy!: () => void;
+    const writeText = vi.fn().mockResolvedValueOnce(undefined).mockImplementationOnce(() => new Promise<void>((resolve) => { resolveCopy = resolve; }));
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+    setup();
+    await screen.findByText("Maya");
+    fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
+    const copied = await screen.findByRole("button", { name: "Copied" });
+    fireEvent.click(copied);
+    expect(copied).toHaveTextContent("Copied");
+    fireEvent.click(copied);
+    expect(writeText).toHaveBeenCalledTimes(2);
+    resolveCopy();
+    await waitFor(() => expect(copied).toHaveTextContent("Copied"));
+  });
   it("filters candidates by review state without changing interview status", async () => {
     setup();
     await screen.findByText("Daniel");

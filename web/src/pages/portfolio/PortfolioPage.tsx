@@ -1,3 +1,4 @@
+import { notify } from "@/components/ui/toast";
 import { useBreadcrumbLabel } from "@/components/layout/Breadcrumbs";
 import { ErrorState, EmptyState } from "@/components/ui/page";
 import { useEffect, useState, useCallback } from "react";
@@ -88,6 +89,7 @@ export default function PortfolioPage() {
         a.download = `portfolio-${sessionId}.json`;
         a.click();
         URL.revokeObjectURL(url);
+      notify(`${format.toUpperCase()} download started.`);
       } else {
         const blob = new Blob([res.data as BlobPart], { type: "application/pdf" });
         const url = URL.createObjectURL(blob);
@@ -96,8 +98,10 @@ export default function PortfolioPage() {
         a.download = `portfolio-${sessionId}.pdf`;
         a.click();
         URL.revokeObjectURL(url);
+      notify(`${format.toUpperCase()} download started.`);
       }
     } catch {
+      notify("Could not export the portfolio. Please try again.", "error");
       setError("Could not export the portfolio. Please try again.");
     } finally {
       setExporting(null);
@@ -123,7 +127,7 @@ export default function PortfolioPage() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Portfolio Results</h1>
+            <h1 className="text-2xl font-semibold sm:text-[28px] tracking-tight">Portfolio Results</h1>
             {candidateName && (
               <p className="text-sm text-muted-foreground">{candidateName}</p>
             )}
@@ -188,8 +192,8 @@ export default function PortfolioPage() {
             onClick={async () => {
               try {
                 await sessionsApi.regeneratePortfolio(Number(sessionId));
-                setError(null); setGenerating(true);
-              } catch { setError("Could not restart portfolio generation. Please try again."); }
+                setError(null); setGenerating(true); notify("Portfolio generation restarted.");
+              } catch { notify("Could not restart portfolio generation.", "error"); setError("Could not restart portfolio generation. Please try again."); }
             }}
           >
             <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Retry
@@ -249,7 +253,7 @@ export default function PortfolioPage() {
               <div className="space-y-3">
                 <div>
                   <h2 className="text-sm font-semibold flex items-center gap-1.5">
-                    <Zap className="h-4 w-4 text-amber-500" />
+                    <Zap className="h-4 w-4 text-warning" />
                     Discovered Skills
                   </h2>
                   <p className="text-xs text-muted-foreground">

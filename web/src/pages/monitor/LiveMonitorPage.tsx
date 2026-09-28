@@ -1,3 +1,4 @@
+import { notify } from "@/components/ui/toast";
 import { useBreadcrumbLabel } from "@/components/layout/Breadcrumbs";
 import { ErrorState } from "@/components/ui/page";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -125,10 +126,12 @@ export default function LiveMonitorPage() {
     setEnding(true);
     try {
       await sessionsApi.endSession(Number(sessionId));
+      notify("Interview ended.");
       navigate(`/assessments/${id}/sessions/${sessionId}/portfolio`);
     } catch {
       setEnding(false);
       setEndError(true);
+      notify("Could not end the interview. Please try again.", "error");
     }
   };
 
@@ -167,7 +170,7 @@ export default function LiveMonitorPage() {
           {startedAt && sessionActive && <ElapsedTimer startedAt={startedAt} />}
           <span className={cn(
             "flex items-center gap-1 text-xs",
-            isConnected ? "text-green-600" : "text-muted-foreground"
+            isConnected ? "text-success" : "text-muted-foreground"
           )}>
             <Radio className="h-3 w-3" />
             {isConnected ? "Live" : "Reconnecting..."}
@@ -178,7 +181,7 @@ export default function LiveMonitorPage() {
       {/* Session ended banner */}
       {sessionEnded && (
         <div className="flex items-center gap-2 text-sm bg-muted/50 border rounded-lg px-4 py-3">
-          <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
+          <CheckCircle className="h-4 w-4 text-success shrink-0" />
           <div>
             <span className="font-medium">Session ended</span>
             {sessionEndReason && (
@@ -244,7 +247,7 @@ export default function LiveMonitorPage() {
                   <div key={skill.id ?? skill.skill_label} className="space-y-1.5">
                     <div className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-1">
-                        <Zap className="h-3 w-3 text-amber-500" />
+                        <Zap className="h-3 w-3 text-warning" />
                         {skill.skill_label}
                       </span>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -256,7 +259,7 @@ export default function LiveMonitorPage() {
                     </div>
                     <Progress
                       value={COVERAGE_STATE_WIDTH[skill.state]}
-                      indicatorClassName="bg-amber-400"
+                      indicatorClassName="bg-warning"
                       className="h-2"
                     />
                     {skill.last_signal && (

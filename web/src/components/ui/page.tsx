@@ -17,7 +17,7 @@ export function PageHeader({
   return (
     <header className="flex flex-wrap items-start justify-between gap-4 border-b pb-6">
       <div className="min-w-0">
-        <h1 className="text-2xl font-semibold tracking-tight break-words">
+        <h1 className="text-2xl font-semibold sm:text-[28px] tracking-tight break-words">
           {title}
         </h1>
         {description && (
@@ -102,7 +102,7 @@ export function SearchField({
     <div className="relative w-full sm:max-w-xs">
       <Search
         aria-hidden="true"
-        className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground"
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
       />
       <Input
         ref={inputRef}
@@ -118,7 +118,7 @@ export function SearchField({
           type="button"
           variant="ghost"
           size="icon"
-          className="absolute right-0.5 top-0.5 h-8 w-8 text-muted-foreground"
+          className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground"
           aria-label={`Clear ${label.toLowerCase()}`}
           onClick={() => { onChange(""); inputRef.current?.focus(); }}
         >

@@ -43,7 +43,7 @@ export default function NarrativeCards({
           </CardHeader>
           <CardContent className="px-4 pb-4">
             {narrative_source === "rule_based_fallback" && (
-              <p className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              <p className="mb-3 rounded-md border border-warning/20 bg-warning/10 px-3 py-2 text-xs text-warning">
                 The AI narrative was unavailable. This summary only counts deterministic skill-level comparisons.
               </p>
             )}

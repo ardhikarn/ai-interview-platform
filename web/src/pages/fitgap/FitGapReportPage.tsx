@@ -1,3 +1,4 @@
+import { notify } from "@/components/ui/toast";
 import { useBreadcrumbLabel } from "@/components/layout/Breadcrumbs";
 import { ErrorState, EmptyState } from "@/components/ui/page";
 import { useEffect, useState, useCallback } from "react";
@@ -141,9 +142,11 @@ export default function FitGapReportPage() {
     setRegenerating(true);
     try {
       await portfoliosApi.regenerateFitGap(portfolio.id, Number(vacancyId));
+      notify("Report regeneration started.");
       setReport(null);
       setGenerating(true);
     } catch {
+      notify("Could not regenerate the report. Please try again.", "error");
       setLoadError("Could not regenerate the report. Please try again.");
     } finally {
       setRegenerating(false);
@@ -173,7 +176,9 @@ export default function FitGapReportPage() {
       a.download = `fitgap-${sessionId}-${vacancyId}.${ext}`;
       a.click();
       URL.revokeObjectURL(url);
+      notify(`${format.toUpperCase()} download started.`);
     } catch {
+      notify("Could not export the report. Please try again.", "error");
       setExportError(
         `Failed to export ${format.toUpperCase()}. Please try again.`,
       );
@@ -200,7 +205,9 @@ export default function FitGapReportPage() {
       setDecisionNotes(res.data.session.decision_notes ?? decisionNotes.trim());
       setDecidedAt(res.data.session.decided_at ?? null);
       setDecisionSaved(true);
+      notify("Hiring decision saved.");
     } catch (e: any) {
+      notify("Could not save the hiring decision. Please try again.", "error");
       setDecisionError(
         e?.response?.data?.errors?.[0]?.message ??
           "Failed to save the hiring decision.",
@@ -232,7 +239,7 @@ export default function FitGapReportPage() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <h1 className="text-2xl font-semibold sm:text-[28px] tracking-tight">
               Fit/Gap Report
             </h1>
           </div>
@@ -366,7 +373,7 @@ export default function FitGapReportPage() {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm flex items-center gap-1.5">
-                    <Zap className="h-4 w-4 text-amber-500" />
+                    <Zap className="h-4 w-4 text-warning" />
                     Discovered Skills (not in vacancy requirements)
                   </CardTitle>
                 </CardHeader>

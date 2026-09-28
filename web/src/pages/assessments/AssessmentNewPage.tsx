@@ -1,3 +1,4 @@
+import { notify } from "@/components/ui/toast";
 import { PageHeader } from "@/components/ui/page";
 import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -99,8 +100,10 @@ export default function AssessmentNewPage() {
         })),
       };
       const res = await assessmentsApi.create(payload);
+      notify("Assessment created.");
       navigate(`/assessments/${res.data.assessment.id}/invite`);
     } catch (e: any) {
+      notify("Could not save. Your changes are still here; please try again.", "error");
       setError(e?.response?.data?.errors?.[0]?.message ?? "Failed to save assessment.");
     } finally {
       setSubmitting(false);

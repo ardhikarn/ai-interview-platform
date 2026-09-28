@@ -1,3 +1,4 @@
+import { notify } from "@/components/ui/toast";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,9 +40,11 @@ export default function OverridePanel({ skill, existingOverride, onSaved }: Over
     try {
       const res = await portfoliosApi.getOverride(skill.id, { override_level: overrideLevel, assessor_notes: notes });
       onSaved(res.data.override);
+      notify("Recruiter override saved.");
       setOpen(false);
     } catch {
       setSaveError(true);
+      notify("Could not save the override. Your edits are still here.", "error");
     } finally {
       setSaving(false);
     }

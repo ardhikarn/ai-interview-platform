@@ -19,7 +19,7 @@ function StateIcon({ state }: { state: ProctoringState }) {
     if (state === ProctoringState.LOADING)
         return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
     if (state === ProctoringState.PASSED)
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
     if (state === ProctoringState.ERROR)
         return <XCircle className="h-4 w-4 text-destructive" />;
     return <Circle className="h-4 w-4 text-muted-foreground/40" />;
@@ -252,7 +252,7 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
     return (
         <div className="rounded-lg border bg-card overflow-hidden">
             {/* Camera preview */}
-            {REQUIRE_CAMERA && <div className="relative bg-black aspect-video">
+            {REQUIRE_CAMERA && <div className="relative bg-background aspect-video">
                 {videoStream ? (
                     <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
                 ) : (
@@ -264,8 +264,8 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
                     </div>
                 )}
                 {progress.camera === ProctoringState.PASSED && videoStream && (
-                    <span className="absolute bottom-2 left-2 flex items-center gap-1 text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">
-                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    <span className="absolute bottom-2 left-2 flex items-center gap-1 text-xs bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full">
+                        <span className="w-1.5 h-1.5 rounded-full bg-destructive-foreground animate-pulse" />
                         LIVE
                     </span>
                 )}
@@ -279,7 +279,7 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
                             <span className="text-sm font-medium">{label}</span>
                             <div className="flex items-center gap-2">
                                 <StateIcon state={progress[key]} />
-                                <span className={`text-xs w-16 text-right ${progress[key] === ProctoringState.PASSED ? "text-green-600" :
+                                <span className={`text-xs w-16 text-right ${progress[key] === ProctoringState.PASSED ? "text-success" :
                                     progress[key] === ProctoringState.ERROR ? "text-destructive" :
                                         "text-muted-foreground"
                                     }`}>
@@ -291,13 +291,13 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
                         {/* Internet speed details */}
                         {key === "internet" && internetResult && (
                             <div className="mt-2 flex gap-3 text-xs">
-                                <span className={internetResult.download >= thresholds.minDownloadMbps ? "text-green-600" : "text-destructive"}>
+                                <span className={internetResult.download >= thresholds.minDownloadMbps ? "text-success" : "text-destructive"}>
                                     ↓ {internetResult.download} Mbps
                                 </span>
-                                <span className={internetResult.upload >= thresholds.minUploadMbps ? "text-green-600" : "text-destructive"}>
+                                <span className={internetResult.upload >= thresholds.minUploadMbps ? "text-success" : "text-destructive"}>
                                     ↑ {internetResult.upload} Mbps
                                 </span>
-                                <span className={internetResult.ping <= thresholds.maxPingMs ? "text-green-600" : "text-destructive"}>
+                                <span className={internetResult.ping <= thresholds.maxPingMs ? "text-success" : "text-destructive"}>
                                     {internetResult.ping} ms
                                 </span>
                             </div>
@@ -308,7 +308,7 @@ const HardwareCheck: React.FC<HardwareCheckProps> = ({ onStart }) => {
                             <div className="mt-2 flex items-center gap-2">
                                 <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
                                     <div
-                                        className="h-full bg-green-500 transition-all duration-150"
+                                        className="h-full bg-success transition-all duration-150"
                                         style={{ width: `${Math.min(audioLevel * 2, 100)}%` }}
                                     />
                                 </div>

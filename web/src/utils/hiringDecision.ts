@@ -7,9 +7,9 @@ export type CandidateDecisionStatus = {
 };
 
 const DECISION_STATUS: Record<HiringDecision, CandidateDecisionStatus> = {
-  advance: { label: "Advanced", className: "text-green-700", dotClassName: "bg-green-500" },
-  hold: { label: "On hold", className: "text-amber-700", dotClassName: "bg-amber-500" },
-  reject: { label: "Rejected", className: "text-red-700", dotClassName: "bg-red-500" },
+  advance: { label: "Advanced", className: "text-success", dotClassName: "bg-success" },
+  hold: { label: "On hold", className: "text-warning", dotClassName: "bg-warning" },
+  reject: { label: "Rejected", className: "text-destructive", dotClassName: "bg-destructive" },
 };
 
 export function getCandidateDecisionStatus(
@@ -18,12 +18,12 @@ export function getCandidateDecisionStatus(
   if (session.hiring_decision) return DECISION_STATUS[session.hiring_decision];
   if (session.status === "ended" && session.end_reason !== "error") {
     if (session.portfolio_status === "failed") {
-      return { label: "Report failed", className: "text-red-700", dotClassName: "bg-red-500" };
+      return { label: "Report failed", className: "text-destructive", dotClassName: "bg-destructive" };
     }
     if (session.portfolio_status !== "complete") {
-      return { label: "Generating report", className: "text-blue-700", dotClassName: "bg-blue-500" };
+      return { label: "Generating report", className: "text-info", dotClassName: "bg-info" };
     }
-    return { label: "Needs review", className: "text-amber-700", dotClassName: "bg-amber-500" };
+    return { label: "Needs review", className: "text-warning", dotClassName: "bg-warning" };
   }
   return null;
 }

@@ -1,3 +1,4 @@
+import { notify } from "@/components/ui/toast";
 import { useBreadcrumbLabel } from "@/components/layout/Breadcrumbs";
 import { ErrorState } from "@/components/ui/page";
 import { useEffect, useState } from "react";
@@ -33,6 +34,7 @@ export default function TranscriptPage() {
   }, [sessionId]);
 
   const handleDownload = () => {
+    try {
     const lines = turns.map((t) => {
       const label = t.speaker === "ai" ? "AI" : "Candidate";
       return `[${label}]\n${t.text}`;
@@ -44,6 +46,10 @@ export default function TranscriptPage() {
     a.download = `transcript-session-${sessionId}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+    notify("Transcript download started.");
+    } catch {
+      notify("Could not download the transcript. Please try again.", "error");
+    }
   };
 
   return (
@@ -57,7 +63,7 @@ export default function TranscriptPage() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Interview Transcript</h1>
+            <h1 className="text-2xl font-semibold sm:text-[28px] tracking-tight">Interview Transcript</h1>
             {candidateName && (
               <p className="text-sm text-muted-foreground">{candidateName}</p>
             )}

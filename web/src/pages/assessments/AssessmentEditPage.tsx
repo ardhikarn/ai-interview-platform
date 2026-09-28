@@ -1,3 +1,4 @@
+import { notify } from "@/components/ui/toast";
 import { useBreadcrumbLabel } from "@/components/layout/Breadcrumbs";
 import { PageHeader, ErrorState } from "@/components/ui/page";
 import { useEffect, useState } from "react";
@@ -85,8 +86,10 @@ export default function AssessmentEditPage() {
         time_limit_min: data.time_limit_min,
         assessment_skills_attributes: data.skills.map((s, i) => ({ ...s, display_order: i })),
       });
+      notify("Assessment saved.");
       navigate(`/assessments/${id}/invite`);
     } catch (e: any) {
+      notify("Could not save. Your changes are still here; please try again.", "error");
       setError(e?.response?.data?.errors?.[0]?.message ?? "Failed to save.");
     } finally {
       setSubmitting(false);

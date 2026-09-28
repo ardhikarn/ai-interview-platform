@@ -1,7 +1,8 @@
+import { notify } from "@/components/ui/toast";
 import { useBreadcrumbLabel } from "@/components/layout/Breadcrumbs";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { FilterSelect } from "@/components/ui/filter-select";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +55,7 @@ export default function AssessmentInvitePage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [creatingSession, setCreatingSession] = useState(false);
   const [newSession, setNewSession] = useState<Session | null>(null);
+  const copyPending = useRef(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [candidateNameInput, setCandidateNameInput] = useState("");
@@ -110,6 +112,7 @@ export default function AssessmentInvitePage() {
       );
       const created = res.data.session;
       setNewSession(created);
+      notify("Invitation created. Share the link with your candidate.");
       setCopiedId(null);
       setSessions((prev) => [created, ...prev]);
       setShowInviteDialog(false);
@@ -117,22 +120,29 @@ export default function AssessmentInvitePage() {
       setFilter("All candidates");
       setPage(1);
     } catch {
+      notify("Could not create the invitation. Please try again.", "error");
       setActionError("Couldn't create the invitation. Please try again.");
     } finally {
       setCreatingSession(false);
     }
   };
   const copyLink = async (session: Session) => {
+    if (copyPending.current) return;
+    copyPending.current = true;
     setActionError(null);
-    setCopiedId(null);
     try {
       await navigator.clipboard.writeText(session.invite_url);
       setCopiedId(session.id);
+      notify("Invitation link copied.");
     } catch {
+      setCopiedId(null);
+      notify("Could not copy the link. You can copy it manually below.", "error");
       setActionError(
         "Couldn't copy the link. Select and copy it from the invitation below.",
       );
       setNewSession(session);
+    } finally {
+      copyPending.current = false;
     }
   };
   const visible = sessions

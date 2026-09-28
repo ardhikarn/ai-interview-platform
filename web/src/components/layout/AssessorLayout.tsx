@@ -1,3 +1,5 @@
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
+import { notify } from "@/components/ui/toast";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAtomValue, useSetAtom } from "jotai";
 import { tenantAtom } from "@/stores/tenantAtom";
@@ -26,9 +28,11 @@ export default function AssessorLayout() {
     clearToken();
     setAuth({ token: null });
     navigate("/login");
+    notify("You have been logged out.");
   };
   return (
     <BreadcrumbProvider>
+    <AlertDialog>
     <div className="min-h-screen bg-background md:pl-56">
       <a
         href="#main-content"
@@ -53,15 +57,14 @@ export default function AssessorLayout() {
               </span>
             </span>
           </Link>
-          <Button
+          <AlertDialogTrigger asChild><Button
             className="md:hidden"
             variant="ghost"
             size="icon"
             aria-label="Log out"
-            onClick={handleLogout}
           >
             <LogOut />
-          </Button>
+          </Button></AlertDialogTrigger>
         </div>
         <div className="hidden px-4 pb-6 pt-3 md:block">
           <div className="flex items-center gap-2.5 rounded-md border bg-background p-2.5">
@@ -93,7 +96,7 @@ export default function AssessorLayout() {
               className={cn(
                 "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors duration-150 ease-out",
                 location.pathname.startsWith(href)
-                  ? "bg-primary/10 font-medium text-primary"
+                  ? "bg-background font-semibold text-foreground ring-1 ring-inset ring-border"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
@@ -103,13 +106,12 @@ export default function AssessorLayout() {
           ))}
         </nav>
         <div className="mt-auto hidden border-t p-3 md:block">
-          <Button
+          <AlertDialogTrigger asChild><Button
             variant="ghost"
             className="w-full justify-start text-muted-foreground"
-            onClick={handleLogout}
           >
             <LogOut /> Log out
-          </Button>
+          </Button></AlertDialogTrigger>
         </div>
       </aside>
       <Breadcrumbs />
@@ -121,6 +123,11 @@ export default function AssessorLayout() {
         <Outlet />
       </main>
     </div>
+      <AlertDialogContent>
+        <AlertDialogHeader><AlertDialogTitle>Log out of your workspace?</AlertDialogTitle><AlertDialogDescription>You will return to the sign-in page. Any unsaved form changes will be lost.</AlertDialogDescription></AlertDialogHeader>
+        <AlertDialogFooter><AlertDialogCancel>Stay signed in</AlertDialogCancel><AlertDialogAction onClick={handleLogout}>Log out</AlertDialogAction></AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </BreadcrumbProvider>
   );
 }

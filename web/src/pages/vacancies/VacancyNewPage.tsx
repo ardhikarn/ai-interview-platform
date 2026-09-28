@@ -1,3 +1,4 @@
+import { notify } from "@/components/ui/toast";
 import { PageHeader } from "@/components/ui/page";
 import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -42,8 +43,10 @@ export default function VacancyNewPage() {
         competency_expectations: data.competency_expectations,
         vacancy_skills_attributes: data.skills,
       });
+      notify("Vacancy created.");
       navigate("/vacancies");
     } catch (e: any) {
+      notify("Could not save. Your changes are still here; please try again.", "error");
       setError(e?.response?.data?.errors?.[0]?.message ?? "Failed to save vacancy.");
     } finally {
       setSubmitting(false);

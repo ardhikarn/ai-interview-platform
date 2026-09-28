@@ -1,3 +1,4 @@
+import { notify } from "@/components/ui/toast";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSetAtom } from "jotai";
@@ -25,6 +26,7 @@ export default function LoginPage() {
       const token = res.data.token;
       saveToken(token);
       setAuth({ token });
+      notify("Signed in successfully.");
       navigate("/assessments");
     } catch {
       setError("Invalid email or password.");

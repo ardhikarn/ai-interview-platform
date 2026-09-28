@@ -1,3 +1,4 @@
+import { notify } from "@/components/ui/toast";
 import { useBreadcrumbLabel } from "@/components/layout/Breadcrumbs";
 import { PageHeader, ErrorState } from "@/components/ui/page";
 import { useEffect, useState } from "react";
@@ -56,8 +57,10 @@ export default function VacancyEditPage() {
         competency_expectations: data.competency_expectations,
         vacancy_skills_attributes: data.skills,
       });
+      notify("Vacancy saved.");
       navigate("/vacancies");
     } catch {
+      notify("Could not save. Your changes are still here; please try again.", "error");
       setError("Could not save the vacancy. Your changes are still here; please try again.");
     } finally {
       setSubmitting(false);
